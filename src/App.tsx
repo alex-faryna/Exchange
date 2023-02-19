@@ -1,6 +1,7 @@
-import React from 'react';
+import React, {ReactNode, useState} from 'react';
 import logo from './logo.svg';
 import './App.css';
+import {HiPencil} from "react-icons/hi";
 
 function Header() {
   return <header className='nav header'>
@@ -23,6 +24,33 @@ interface CurrencyRate {
     sell: number;
 }
 
+function Cell({ children }: { children: ReactNode }) {
+    return <div className='cell'>{ children }</div>;
+}
+
+function EditableCell({ initialValue }: { initialValue: number }) {
+    const [edit, setEdit] = useState(false);
+
+    const finishEditing = (value: string) => {
+        setEdit(false);
+        console.log(value);
+    }
+
+    const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter') {
+            finishEditing(event.currentTarget.value);
+        }
+    };
+
+    return <Cell>
+        <HiPencil className={`edit-icon ${edit ? 'editing' : ''}`} onClick={() => setEdit(true)}></HiPencil>
+        { edit ? <input className='field' defaultValue={initialValue} autoFocus={true}
+                        onKeyDown={handleEnter}
+                        onBlur={event => finishEditing(event.target.value)}
+        /> : initialValue }
+    </Cell>
+}
+
 function RatesTable() {
     const data: CurrencyRate[] = [
         { ccy: 'USD', baseCcy: 'UAH', buy: 27.5, sell: 27.7 },
@@ -31,15 +59,15 @@ function RatesTable() {
     ];
 
     return <div className='rates-table'>
-        <div className='cell'>Currency/Current Date</div>
-        <div className='cell'>Buy</div>
-        <div className='cell'>Cell</div>
+        <Cell>Currency/Current Date</Cell>
+        <Cell>Buy</Cell>
+        <Cell>Cell</Cell>
         {
-            data.map(row => <>
-                <div className='cell'>{row.ccy}/{row.baseCcy}</div>
-                <div className='cell'>{row.buy}</div>
-                <div className='cell'>{row.sell}</div>
-            </>)
+            data.map(row => <React.Fragment key={`${row.ccy}/${row.baseCcy}`}>
+                <Cell>{row.ccy}/{row.baseCcy}</Cell>
+                <EditableCell initialValue={row.buy}></EditableCell>
+                <EditableCell initialValue={row.sell}></EditableCell>
+            </React.Fragment>)
         }
     </div>;
 }

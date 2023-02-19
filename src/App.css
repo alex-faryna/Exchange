@@ -40,4 +40,26 @@
   text-align: center;
   border: 1px solid grey;
   padding: 1rem;
+  position: relative;
+  width: 100%;
+}
+
+.rates-table .cell .field {
+  width: 100%;
+  outline: none;
+  border: 2px solid grey;
+  padding: 0.1rem 0.2rem;
+  border-radius: 5px;
+}
+
+.rates-table .cell .edit-icon {
+  position: absolute;
+  display: none;
+  top: 0.25rem;
+  right: 0.25rem;
+  scale: 1.25;
+}
+
+.rates-table .cell:hover .edit-icon:not(.editing) {
+  display: block;
 }
