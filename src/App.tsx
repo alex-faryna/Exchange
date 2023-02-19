@@ -1,10 +1,10 @@
-import React, {ReactNode, useState} from 'react';
+import React, {ReactNode, useEffect, useState} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {HiPencil} from "react-icons/hi";
 import {useDispatch, useSelector} from "react-redux";
 
-import { setRates } from './store/exchange.state';
+import { setRates, errorLoading } from './store/exchange.state';
 import state, { RootState} from "./store";
 
 function Header() {
@@ -64,29 +64,18 @@ function EditableCell({ initialValue }: { initialValue: number }) {
     </Cell>
 }
 
-state.dispatch(setRates([{ key: '12a3', initialValue: { buy: 27.5, sell: 32 }}]));
-
 function RatesTable() {
-    const exchangeRates = useSelector((state: RootState) => state.exchange);
-    const dispatch = useDispatch();
-
-    console.log(exchangeRates);
-
-    const data: CurrencyRate[] = [
-        { ccy: 'USD', baseCcy: 'UAH', buy: 27.5, sell: 27.7 },
-        { ccy: 'EUR', baseCcy: 'UAH', buy: 32.5, sell: 32.7 },
-        { ccy: 'BTC', baseCcy: 'USD', buy: 11500, sell: 11700 },
-    ];
+    const exchangeRates = useSelector((state: RootState) => state.exchange.rates);
 
     return <div className='rates-table'>
         <Cell>Currency/Current Date</Cell>
         <Cell>Buy</Cell>
         <Cell>Cell</Cell>
         {
-            data.map(row => <React.Fragment key={`${row.ccy}/${row.baseCcy}`}>
-                <Cell>{row.ccy}/{row.baseCcy}</Cell>
-                <EditableCell initialValue={row.buy}></EditableCell>
-                <EditableCell initialValue={row.sell}></EditableCell>
+            Object.entries(exchangeRates).map(([key, { value }]) => <React.Fragment key={key}>
+                <Cell>{key}</Cell>
+                <EditableCell initialValue={value.buy}></EditableCell>
+                <EditableCell initialValue={value.sell}></EditableCell>
             </React.Fragment>)
         }
     </div>;
@@ -96,14 +85,55 @@ function Converter() {
     return <span>Converter</span>
 }
 
+function stubData() {
+    return new Promise<Record<string, string>[]>((resolve, reject) => {
+        setTimeout(() => {
+            resolve([
+                {"ccy":"EUR","base_ccy":"UAH","buy":"40.90","sale":"41.90"},
+                {"ccy":"USD","base_ccy":"UAH","buy":"39.20","sale":"39.70"},
+                {"ccy":"BTC","base_ccy":"USD","buy":"11500","sale":"11700"}
+            ]);
+        }, 1500);
+    });
+}
+function Container({ children }: { children: ReactNode}) {
+    const exchangeState = useSelector((state: RootState) => state.exchange.state);
+
+    let elem = children;
+    if (exchangeState === 'loading') {
+        elem = <p>Loading...</p>
+    } else if (exchangeState === 'error') {
+        elem = <p>Error!</p>
+    }
+
+    return <div className='container'>
+        { elem }
+    </div>;
+}
+
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+      //fetch("http://api.privatbank.ua/p24api/pubinfo?json&exchange&coursid=5")
+      stubData()
+          .then((data: Record<string, string>[]) => {
+              const res = data.map(row => ({
+                  key: `${row.ccy}/${row.base_ccy}`,
+                  initialValue: { buy: Number(row.buy), sell: Number(row.sale) },
+              }));
+              dispatch(setRates(res));
+          })
+          .catch(error => dispatch(errorLoading()));
+  }, []);
+
   return (
     <>
       <Header></Header>
-      <div className='container'>
-        <RatesTable></RatesTable>
-        <Converter></Converter>
-      </div>
+      <Container>
+          <RatesTable></RatesTable>
+          <Converter></Converter>
+      </Container>
       <Footer></Footer>
     </>
   );
