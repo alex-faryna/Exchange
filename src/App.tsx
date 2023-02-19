@@ -2,6 +2,10 @@ import React, {ReactNode, useState} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {HiPencil} from "react-icons/hi";
+import {useDispatch, useSelector} from "react-redux";
+
+import { setRates } from './store/exchange.state';
+import state, { RootState} from "./store";
 
 function Header() {
   return <header className='nav header'>
@@ -60,7 +64,14 @@ function EditableCell({ initialValue }: { initialValue: number }) {
     </Cell>
 }
 
+state.dispatch(setRates([{ key: '12a3', initialValue: { buy: 27.5, sell: 32 }}]));
+
 function RatesTable() {
+    const exchangeRates = useSelector((state: RootState) => state.exchange);
+    const dispatch = useDispatch();
+
+    console.log(exchangeRates);
+
     const data: CurrencyRate[] = [
         { ccy: 'USD', baseCcy: 'UAH', buy: 27.5, sell: 27.7 },
         { ccy: 'EUR', baseCcy: 'UAH', buy: 32.5, sell: 32.7 },
