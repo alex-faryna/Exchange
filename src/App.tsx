@@ -28,26 +28,35 @@ function Cell({ children }: { children: ReactNode }) {
     return <div className='cell'>{ children }</div>;
 }
 
+// add value i guess or smth like that (when redux)
 function EditableCell({ initialValue }: { initialValue: number }) {
+    const [value, setValue] = useState(initialValue);
     const [edit, setEdit] = useState(false);
 
-    const finishEditing = (value: string) => {
+    const finishEditing = (value: string, strict = false) => {
+        const newValue = Number(value);
+        const off = initialValue / 10;
+
+        if (newValue >= initialValue - off && newValue <= initialValue + off) {
+            setValue(newValue);
+        } else if(strict) {
+            return;
+        }
         setEdit(false);
-        console.log(value);
     }
 
     const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter') {
-            finishEditing(event.currentTarget.value);
+            finishEditing(event.currentTarget.value, true);
         }
     };
 
     return <Cell>
         <HiPencil className={`edit-icon ${edit ? 'editing' : ''}`} onClick={() => setEdit(true)}></HiPencil>
-        { edit ? <input className='field' defaultValue={initialValue} autoFocus={true}
+        { edit ? <input className='field' defaultValue={value} autoFocus={true}
                         onKeyDown={handleEnter}
                         onBlur={event => finishEditing(event.target.value)}
-        /> : initialValue }
+        /> : value }
     </Cell>
 }
 
