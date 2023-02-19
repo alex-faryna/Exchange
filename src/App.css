@@ -63,3 +63,42 @@
 .rates-table .cell:hover .edit-icon:not(.editing) {
   display: block;
 }
+
+.converter {
+  display: flex;
+  width: 70%;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.currency-side {
+  padding: 1rem 1rem 0.5rem;
+  width: 100%;
+  display: grid;
+  gap: 5px;
+  grid-template-columns: 1fr 70px;
+  grid-template-areas: "title ."
+                       "input select";
+}
+
+.currency-title {
+  grid-area: title;
+}
+
+.currency-input {
+  grid-area: input;
+}
+
+.currency-select {
+  grid-area: select;
+}
+
+.currency-select button {
+  width: 100%;
+}
+
+.switch-icon {
+  align-self: flex-end;
+  width: 3rem;
+  height: 3rem;
+}

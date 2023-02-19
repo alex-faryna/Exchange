@@ -1,11 +1,13 @@
 import React, {ReactNode, useEffect, useState} from 'react';
 import logo from './logo.svg';
 import './App.css';
-import {HiPencil} from "react-icons/hi";
+import {HiOutlineSwitchHorizontal, HiPencil} from "react-icons/hi";
 import {useDispatch, useSelector} from "react-redux";
-
 import {setRates, errorLoading, editRate} from './store/exchange.state';
 import state, { RootState} from "./store";
+import {Dropdown, DropdownButton, FormText} from "react-bootstrap";
+import Form from 'react-bootstrap/Form';
+
 
 function Header() {
   return <header className='nav header'>
@@ -80,8 +82,32 @@ function RatesTable() {
     </div>;
 }
 
+function CurrencyDropdown() {
+    const options = ['UAH', 'USD', 'EUR', 'BTC'];
+
+    return <DropdownButton size="sm" id="dropdown-basic-button" title="UAH" onSelect={key => console.log(key)}>
+        { options.map(option => <Dropdown.Item eventKey={option} key={option}>{ option }</Dropdown.Item>) }
+    </DropdownButton>
+}
+
+function CurrencySide({ title }: { title: string }) {
+    return <div className='currency-side'>
+        <div className='currency-title'>{ title }</div>
+        <div className='currency-input'>
+            <Form.Control size="sm"></Form.Control>
+        </div>
+        <div className='currency-select'>
+            <CurrencyDropdown></CurrencyDropdown>
+        </div>
+    </div>
+}
+
 function Converter() {
-    return <span>Converter</span>
+    return <div className='converter'>
+        <CurrencySide title='Change'></CurrencySide>
+        <HiOutlineSwitchHorizontal className='switch-icon'></HiOutlineSwitchHorizontal>
+        <CurrencySide title='Get'></CurrencySide>
+    </div>
 }
 
 function stubData() {
@@ -92,9 +118,10 @@ function stubData() {
                 {"ccy":"USD","base_ccy":"UAH","buy":"39.20","sale":"39.70"},
                 {"ccy":"BTC","base_ccy":"USD","buy":"11500","sale":"11700"}
             ]);
-        }, 1500);
+        }, 300);
     });
 }
+
 function Container({ children }: { children: ReactNode}) {
     const exchangeState = useSelector((state: RootState) => state.exchange.state);
 
@@ -123,7 +150,7 @@ function App() {
               }));
               dispatch(setRates(res));
           })
-          .catch(error => dispatch(errorLoading()));
+          .catch(() => dispatch(errorLoading()));
   }, []);
 
   return (
