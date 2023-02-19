@@ -4,7 +4,7 @@ import './App.css';
 import {HiPencil} from "react-icons/hi";
 import {useDispatch, useSelector} from "react-redux";
 
-import { setRates, errorLoading } from './store/exchange.state';
+import {setRates, errorLoading, editRate} from './store/exchange.state';
 import state, { RootState} from "./store";
 
 function Header() {
@@ -32,17 +32,16 @@ function Cell({ children }: { children: ReactNode }) {
     return <div className='cell'>{ children }</div>;
 }
 
-// add value i guess or smth like that (when redux)
-function EditableCell({ initialValue }: { initialValue: number }) {
-    const [value, setValue] = useState(initialValue);
+function EditableCell({ id, buy, value }: { id: string, buy: boolean, value: number }) {
+    const dispatch = useDispatch();
     const [edit, setEdit] = useState(false);
 
-    const finishEditing = (value: string, strict = false) => {
-        const newValue = Number(value);
-        const off = initialValue / 10;
+    const finishEditing = (inputValue: string, strict = false) => {
+        const newValue = Number(inputValue);
+        const off = value / 10;
 
-        if (newValue >= initialValue - off && newValue <= initialValue + off) {
-            setValue(newValue);
+        if (newValue >= value - off && newValue <= value + off) {
+            dispatch(editRate({ key: id, value: newValue, buy}));
         } else if(strict) {
             return;
         }
@@ -74,8 +73,8 @@ function RatesTable() {
         {
             Object.entries(exchangeRates).map(([key, { value }]) => <React.Fragment key={key}>
                 <Cell>{key}</Cell>
-                <EditableCell initialValue={value.buy}></EditableCell>
-                <EditableCell initialValue={value.sell}></EditableCell>
+                <EditableCell value={value.buy} buy={true} id={key}></EditableCell>
+                <EditableCell value={value.sell} buy={false} id={key}></EditableCell>
             </React.Fragment>)
         }
     </div>;
