@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import {HiOutlineSwitchHorizontal, HiPencil} from "react-icons/hi";
 import {useDispatch, useSelector} from "react-redux";
-import {setRates, errorLoading, editRate} from './store/exchange.state';
+import {setRates, errorLoading, editRate, currencies, setSideCurrency, swapSides} from './store/exchange.state';
 import state, { RootState} from "./store";
 import {Dropdown, DropdownButton, FormText} from "react-bootstrap";
 import Form from 'react-bootstrap/Form';
@@ -82,31 +82,35 @@ function RatesTable() {
     </div>;
 }
 
-function CurrencyDropdown() {
-    const options = ['UAH', 'USD', 'EUR', 'BTC'];
+function CurrencyDropdown({ side }: { side: 'left' | 'right' }) {
+    const sideCurrency = useSelector((state: RootState) => state.exchange[side]);
+    const dispatch = useDispatch();
 
-    return <DropdownButton size="sm" id="dropdown-basic-button" title="UAH" onSelect={key => console.log(key)}>
-        { options.map(option => <Dropdown.Item eventKey={option} key={option}>{ option }</Dropdown.Item>) }
+    return <DropdownButton size="sm" id="dropdown-basic-button" title={sideCurrency}
+                           onSelect={key =>  dispatch(setSideCurrency({ side, value: key! }))}>
+        { currencies.map(option => <Dropdown.Item eventKey={option} key={option}>{ option }</Dropdown.Item>) }
     </DropdownButton>
 }
 
-function CurrencySide({ title }: { title: string }) {
+function CurrencySide({ title, side }: { title: string, side: 'left' | 'right' }) {
     return <div className='currency-side'>
         <div className='currency-title'>{ title }</div>
         <div className='currency-input'>
             <Form.Control size="sm"></Form.Control>
         </div>
         <div className='currency-select'>
-            <CurrencyDropdown></CurrencyDropdown>
+            <CurrencyDropdown side={side}></CurrencyDropdown>
         </div>
     </div>
 }
 
 function Converter() {
+    const dispatch = useDispatch();
+
     return <div className='converter'>
-        <CurrencySide title='Change'></CurrencySide>
-        <HiOutlineSwitchHorizontal className='switch-icon'></HiOutlineSwitchHorizontal>
-        <CurrencySide title='Get'></CurrencySide>
+        <CurrencySide title='Change' side='left'></CurrencySide>
+        <HiOutlineSwitchHorizontal className='switch-icon' onClick={() => dispatch(swapSides())}></HiOutlineSwitchHorizontal>
+        <CurrencySide title='Get' side='right'></CurrencySide>
     </div>
 }
 
