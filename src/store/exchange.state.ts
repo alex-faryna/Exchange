@@ -16,6 +16,8 @@ export type ExchangeState = {
     rates: Record<string, Rate>,
     left: string;
     right: string;
+    amount: number;
+    from: 'left' | 'right';
 };
 
 const initialState: ExchangeState = {
@@ -23,8 +25,11 @@ const initialState: ExchangeState = {
     rates: {},
     left: currencies[0],
     right: currencies[1],
+    amount: 0,
+    from: 'left',
 };
 
+// immer.js under the hood
 export const exchangeSlice = createSlice({
     name: 'exchange',
     initialState,
@@ -54,11 +59,14 @@ export const exchangeSlice = createSlice({
             const tmp = state.left;
             state.left = state.right;
             state.right = tmp;
+        },
+        setAmount: (state, { payload }: PayloadAction<{ side: 'left' | 'right', amount: number }>) => {
+            state.from = payload.side;
+            state.amount = payload.amount;
         }
     },
-
 });
 
-export const { setRates, editRate, errorLoading, setSideCurrency, swapSides } = exchangeSlice.actions;
+export const { setRates, editRate, errorLoading, setSideCurrency, swapSides, setAmount } = exchangeSlice.actions;
 
 export default exchangeSlice.reducer;

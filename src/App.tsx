@@ -1,12 +1,21 @@
-import React, {ReactNode, useEffect, useState} from 'react';
+import React, {ChangeEvent, ReactNode, useEffect, useState} from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {HiOutlineSwitchHorizontal, HiPencil} from "react-icons/hi";
 import {useDispatch, useSelector} from "react-redux";
-import {setRates, errorLoading, editRate, currencies, setSideCurrency, swapSides} from './store/exchange.state';
+import {
+    setRates,
+    errorLoading,
+    editRate,
+    currencies,
+    setSideCurrency,
+    swapSides,
+    setAmount
+} from './store/exchange.state';
 import state, { RootState} from "./store";
 import {Dropdown, DropdownButton, FormText} from "react-bootstrap";
 import Form from 'react-bootstrap/Form';
+import {findConversionRate} from "./converter";
 
 
 function Header() {
@@ -20,14 +29,6 @@ function Footer() {
   return <footer className='nav footer'>
       2023 All rights reserved
   </footer>;
-}
-
-// they will buy {ccy} from you for {buy}{baseCCy}
-interface CurrencyRate {
-    ccy: string; // from
-    baseCcy: string; // to
-    buy: number;
-    sell: number;
 }
 
 function Cell({ children }: { children: ReactNode }) {
@@ -92,11 +93,33 @@ function CurrencyDropdown({ side }: { side: 'left' | 'right' }) {
     </DropdownButton>
 }
 
-function CurrencySide({ title, side }: { title: string, side: 'left' | 'right' }) {
+function CurrencySide({ title, side, onInput }: { title: string, side: 'left' | 'right', onInput: (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void }) {
+    const exchange = useSelector((state: RootState) => state.exchange);
+    const [value, setValue] = useState(0);
+
+    useEffect(() => {
+        if (exchange.from !== side) {
+            const rates = Object.entries(exchange.rates).map(([key, { value }]) => ({
+                ccy: key.split('/')[0],
+                base_ccy: key.split('/')[1],
+                buy: `${value.buy}`,
+                sale: `${value.sell}`,
+            }))
+            const rate = findConversionRate(rates, exchange.left, exchange.right);
+            // console.log(rate);
+            setValue(exchange.amount * rate);
+        }
+    });
+
+    const valChanged = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setValue(Number(event.target.value) || 0);
+        onInput(event);
+    }
+
     return <div className='currency-side'>
-        <div className='currency-title'>{ title }</div>
+        <div className='currency-title'>{title}</div>
         <div className='currency-input'>
-            <Form.Control size="sm"></Form.Control>
+            <Form.Control size="sm" value={value} onChange={valChanged}></Form.Control>
         </div>
         <div className='currency-select'>
             <CurrencyDropdown side={side}></CurrencyDropdown>
@@ -107,10 +130,14 @@ function CurrencySide({ title, side }: { title: string, side: 'left' | 'right' }
 function Converter() {
     const dispatch = useDispatch();
 
+    const calculate = (side: 'left' | 'right', amount: string) => {
+        dispatch(setAmount({ side, amount: Number(amount) || 0 }));
+    }
+
     return <div className='converter'>
-        <CurrencySide title='Change' side='left'></CurrencySide>
+        <CurrencySide title='Change' side='left' onInput={val => calculate('left', val.target.value)}></CurrencySide>
         <HiOutlineSwitchHorizontal className='switch-icon' onClick={() => dispatch(swapSides())}></HiOutlineSwitchHorizontal>
-        <CurrencySide title='Get' side='right'></CurrencySide>
+        <CurrencySide title='Get' side='right' onInput={val => calculate('right', val.target.value)}></CurrencySide>
     </div>
 }
 
@@ -153,6 +180,7 @@ function App() {
                   initialValue: { buy: Number(row.buy), sell: Number(row.sale) },
               }));
               dispatch(setRates(res));
+
           })
           .catch(() => dispatch(errorLoading()));
   }, []);
